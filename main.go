@@ -1,16 +1,18 @@
 package main
 
 import (
+	"os"
 	"project/my-movies-list/movies"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	router := gin.Default()
 
 	router.GET("/movies", movies.GetMovies)
-	router.POST("/movies", movies.AddMovie)
 
-	router.Run("localhost:8080")
+	router.Run("localhost:" + os.Getenv("APP_PORT"))
 }

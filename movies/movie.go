@@ -1,7 +1,10 @@
 package movies
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,25 +16,24 @@ type MovieType struct {
 	Image string `json:"image"`
 }
 
-var movies = []MovieType{
-	{Id:    "akluhsiahsihaishaisha",
-	Name:  "Good Burger",
-	Stars: 3,
-	Image: "https://m.media-amazon.com/images/M/MV5BMGM1YTJhOTQtNmYwZS00MGU0LTkxNWEtZGEwM2I4NTc5MzZlXkEyXkFqcGdeQXVyMTUyOTc1NDYz._V1_FMjpg_UX1000_.jpg",},
-}
-
-func AddMovie(c *gin.Context) {
-	var newMovie MovieType;
-
-	if err := c.BindJSON(&newMovie); err != nil {
-		return
-	}
-
-	movies = append(movies, newMovie)
-	c.IndentedJSON(http.StatusCreated, movies)
-}
-
 func GetMovies(c *gin.Context) {
+	URL := os.Getenv("MOVIE_URL")
+	
+	req, _ := http.NewRequest("GET", URL, nil)
+	
+	req.Header.Set("Authorization", "Bearer "+ os.Getenv("MOVIE_API_TOKEN"))
+	req.Header.Set("accept", "application/json")
+	
+	movies, err := http.DefaultClient.Do(req)
 
-	c.IndentedJSON(http.StatusOK, movies)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, "System Error")
+	}
+	
+	body, _ := io.ReadAll(movies.Body)
+
+	var resp map[string]interface{}
+	json.Unmarshal([]byte(body), &resp)
+
+	c.JSON(http.StatusOK, resp)
 }
